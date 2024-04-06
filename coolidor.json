@@ -1,0 +1,11 @@
+{
+        "temp_adjust": "-1.5",
+	"retries": "15",
+	"rrdfile": "/opt/coolidor/fridge_temp.rrd",
+	"looptime": "60",
+	"settemp": "65",
+	"temp_variation": "1",
+	"hightemp_max": "72",
+	"no_actuate": false,
+	"temp_override": "0"
+}
