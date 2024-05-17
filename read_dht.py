@@ -1,6 +1,7 @@
 
 # i2c read DHT20 module
 # get i2c address via running: sudo i2cdetect -y 0
+# version 1.0b
 
 import time
 import smbus
@@ -19,11 +20,11 @@ time.sleep(0.1)
 
 data = i2cbus.read_i2c_block_data(address,0x71,7)
 
-Traw = ((data[3] & 0xf) << 16) + (data[4] << 8) + data[5]
-temperature = 200*float(Traw)/2**20 - 50
+temp_raw = ((data[3] & 0xf) << 16) + (data[4] << 8) + data[5]
+temperature = 200*float(temp_raw)/2**20 - 50
 
-Hraw = ((data[3] & 0xf0) >> 4) + (data[1] << 12) + (data[2] << 4)
-humidity = 100*float(Hraw)/2**20
+humi_raw = ((data[3] & 0xf0) >> 4) + (data[1] << 12) + (data[2] << 4)
+humidity = 100*float(humi_raw)/2**20
 
 print(temperature)
 print(humidity)

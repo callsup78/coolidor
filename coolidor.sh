@@ -1,5 +1,5 @@
 #!/bin/bash
 while true ; do
-    /opt/coolidor/coolidor.py
+    /home/svops/coolidor/coolidor.py
     /bin/sleep 10s
 done
