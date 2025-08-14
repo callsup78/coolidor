@@ -51,25 +51,25 @@ def get_temp(retries=5):
             if humidity > 100: # bad read, try again
                 humidity = None
                 tempC = None
+    if tempC is None or humidity is None:
+        return 0, 0, False
     current_temp = tempC * 9/5.0 + 32
-    current_humi = humidity
-    return current_temp, current_humi, True # true if reading is valid   changed humidity to current_humi
+   # humidity = current_humi
+    return current_temp, humidity, True # true if reading is valid
 
-def set_output(hightemp, lowtemp, current_temp, highhumi, lowhumi, current_humi, no_actuate):
-    if current_temp > hightemp:
+def set_output(hightemp, lowtemp, current_temp, highhumi, lowhumi, humidity, no_actuate):
+    output = False
+    if current_temp > hightemp or humidity > highhumi:
         if not no_actuate:
-            GPIO.output(temp_pin, GPIO.HIGH) # set pin high
+            GPIO.output(temp_pin, GPIO.HIGH)
         output = True
-    elif current_temp < lowtemp:
+    elif current_temp < lowtemp or humidity < lowhumi:
         if not no_actuate:
-            GPIO.output(temp_pin, GPIO.LOW) # set pin low
+            GPIO.output(temp_pin, GPIO.LOW)
         output = False
     else:
-        if int(GPIO.input(temp_pin)) == 0:
-            output = False
-        else:
-            output = True 
-    print(('Set output: {} - No_Actuate: {}'.format(output, no_actuate)))
+        output = bool(GPIO.input(temp_pin))
+    print(f"Set output: {output} - No_Actuate: {no_actuate}")
     return output
 
 def main_run():
@@ -96,7 +96,7 @@ def main_run():
                 retries = int(config_data['retries'].strip())
                 looptime = int(config_data['looptime'].strip())
                 rrdfile = str(config_data['rrdfile'].strip())
-                no_actuate = config_data['no_actuate']
+                no_actuate = bool(config_data.get('no_actuate', False))
                 
                 # else:
                 #     no_actuate = False
@@ -106,7 +106,7 @@ def main_run():
                     current_temp = temp_override
                 else:
                     valid_temp = False
-            f.closed
+           # f.closed
         if not valid_temp:
             current_temp, humidity, valid_temp = get_temp(retries)
             current_temp = current_temp + float(config_data['temp_adjust'].strip())
@@ -114,12 +114,15 @@ def main_run():
             print(('TemperatureF: {} - Humidity: {}'.format(current_temp,humidity)))
             print(('Set Temp: {} - HighF: {} - LowF: {} - HighF Max: {} - OverrideF: {} - Adjust: {} - Output: {}'.format(settemp, hightemp,lowtemp,hightemp_max, temp_override, float(config_data['temp_adjust'].strip()), str(output_mode))))
             # print(('Set Humidity: {} - High Humidity: {} - Low Humidity: {} - High Humidity Max: {} - Override Humidity: {} - Adjust: {} - Output: {}'.format(sethumi, highhumi,lowhumi,highhumi_max, humi_override, float(config_data['humi_adjust'].strip()), str(output_mode)))) 
-            output_mode = set_output(hightemp, lowtemp, current_temp, highhumi, lowhumi, current_humi, no_actuate)
+            output_mode = set_output(hightemp, lowtemp, current_temp, highhumi, lowhumi, humidity, no_actuate)
             if output_mode:
                 fridgemode = lowtemp
             else:
                 fridgemode = hightemp
-            ret = rrdtool.update(rrdfile, 'N:%.2f:%.2f:%.2f' %(current_temp,fridgemode,humidity));
+            try:
+                ret = rrdtool.update(rrdfile, f'N:{current_temp:.2f}:{fridgemode:.2f}:{humidity:.2f}')
+            except rrdtool.OperationalError as e:
+                print(f"RRD update failed: {e}")            
             time.sleep(looptime)
         else:
             reset_count += 1
@@ -128,9 +131,16 @@ def main_run():
             reset_sensor(sensor_power)
 
 if __name__ == '__main__':
+    config_data = {}
+    valid_temp = False
+    temp_override = 0
+    humi_override = 0
+    looptime = 60
+    rrdfile = "/default/path.rrd"
     try:
         main_run()
     except:
         GPIO.output(temp_pin, GPIO.LOW) # set pin low
         GPIO.cleanup()
         traceback.print_exc()
+
