@@ -54,93 +54,126 @@ def get_temp(retries=5):
     if tempC is None or humidity is None:
         return 0, 0, False
     current_temp = tempC * 9/5.0 + 32
-   # humidity = current_humi
     return current_temp, humidity, True # true if reading is valid
 
-def set_output(hightemp, lowtemp, current_temp, highhumi, lowhumi, humidity, no_actuate):
-    output = False
-    if current_temp > hightemp or humidity > highhumi:
+def set_output(hightemp, lowtemp, current_temp,
+               highhumi, lowhumi, humidity,
+               no_actuate):
+    temp_output = False
+    humi_output = False
+
+    # --- Temperature control ---
+    if current_temp > hightemp:
         if not no_actuate:
-            GPIO.output(temp_pin, GPIO.HIGH)
-        output = True
-    elif current_temp < lowtemp or humidity < lowhumi:
+            GPIO.output(temp_pin, GPIO.HIGH)  # turn ON fridge/cooler
+        temp_output = True
+    elif current_temp < lowtemp:
         if not no_actuate:
-            GPIO.output(temp_pin, GPIO.LOW)
-        output = False
+            GPIO.output(temp_pin, GPIO.LOW)   # turn OFF fridge/cooler
+        temp_output = False
     else:
-        output = bool(GPIO.input(temp_pin))
-    print(f"Set output: {output} - No_Actuate: {no_actuate}")
-    return output
+        temp_output = bool(GPIO.input(temp_pin))
+
+    # --- Humidity control ---
+    if humidity > highhumi:
+        if not no_actuate:
+            GPIO.output(humidity_pin, GPIO.HIGH)  # turn ON dehumidifier/fan
+        humi_output = True
+    elif humidity < lowhumi:
+        if not no_actuate:
+            GPIO.output(humidity_pin, GPIO.LOW)   # turn OFF dehumidifier/fan
+        humi_output = False
+    else:
+        humi_output = bool(GPIO.input(humidity_pin))
+
+    print(f"[OUTPUT] Temp: {temp_output}, Humidity: {humi_output}, No_Actuate={no_actuate}")
+    return temp_output, humi_output
 
 def main_run():
     reset_sensor(sensor_power)
     reset_count = 0
-    output_mode = False
-    no_actuate = False
-    while True:
-        if os.path.isfile(coolidor_file): # override temp from command line
-            with open(coolidor_file,'r') as f:
-                config_data = json.load(f)
-                temp_override = float(config_data['temp_override'].strip())
-                settemp = float(config_data['settemp'].strip())
-                temp_variation = float(config_data['temp_variation'].strip())
-                lowtemp = settemp - temp_variation
-                hightemp = settemp + temp_variation
-                hightemp_max = int(config_data['hightemp_max'].strip())
-                sethumi = float(config_data['sethumi'].strip()) #adding for humidity control
-                humi_override = float(config_data['humi_override'].strip()) #adding for humidity control
-                humi_variation = float(config_data['humi_variation'].strip()) #adding for humidity control
-                lowhumi = sethumi - humi_variation #adding for humidity control
-                highhumi = sethumi + humi_variation #adding for humidity control
-                highhumi_max = int(config_data['highhumi_max'].strip()) #adding for humidity control
-                retries = int(config_data['retries'].strip())
-                looptime = int(config_data['looptime'].strip())
-                rrdfile = str(config_data['rrdfile'].strip())
-                no_actuate = bool(config_data.get('no_actuate', False))
-                
-                # else:
-                #     no_actuate = False
-                if temp_override != 0:
-                    humidity = 0
-                    valid_temp = True
-                    current_temp = temp_override
-                else:
-                    valid_temp = False
-           # f.closed
-        if not valid_temp:
-            current_temp, humidity, valid_temp = get_temp(retries)
-            current_temp = current_temp + float(config_data['temp_adjust'].strip())
-        if valid_temp:
-            print(('TemperatureF: {} - Humidity: {}'.format(current_temp,humidity)))
-            print(('Set Temp: {} - HighF: {} - LowF: {} - HighF Max: {} - OverrideF: {} - Adjust: {} - Output: {}'.format(settemp, hightemp,lowtemp,hightemp_max, temp_override, float(config_data['temp_adjust'].strip()), str(output_mode))))
-            # print(('Set Humidity: {} - High Humidity: {} - Low Humidity: {} - High Humidity Max: {} - Override Humidity: {} - Adjust: {} - Output: {}'.format(sethumi, highhumi,lowhumi,highhumi_max, humi_override, float(config_data['humi_adjust'].strip()), str(output_mode)))) 
-            output_mode = set_output(hightemp, lowtemp, current_temp, highhumi, lowhumi, humidity, no_actuate)
-            if output_mode:
-                fridgemode = lowtemp
-            else:
-                fridgemode = hightemp
-            try:
-                ret = rrdtool.update(rrdfile, f'N:{current_temp:.2f}:{fridgemode:.2f}:{humidity:.2f}')
-            except rrdtool.OperationalError as e:
-                print(f"RRD update failed: {e}")            
-            time.sleep(looptime)
-        else:
-            reset_count += 1
-            print(('Failed to get a valid temp reading.\nReset Count: {}\n'.format(reset_count)))
-            GPIO.output(temp_pin, GPIO.LOW) # turn off fridge since we failed to read temp
-            reset_sensor(sensor_power)
-
-if __name__ == '__main__':
-    config_data = {}
     valid_temp = False
     temp_override = 0
     humi_override = 0
     looptime = 60
     rrdfile = "/default/path.rrd"
+
+    while True:
+        if os.path.isfile(coolidor_file):
+            with open(coolidor_file, 'r') as f:
+                config_data = json.load(f)
+
+            temp_override = float(config_data.get('temp_override', 0))
+            settemp = float(config_data.get('settemp', 66))
+            temp_variation = float(config_data.get('temp_variation', 2))
+            lowtemp = settemp - temp_variation
+            hightemp = settemp + temp_variation
+            hightemp_max = int(config_data.get('hightemp_max', 72))
+
+            sethumi = float(config_data.get('sethumi', 68))
+            humi_override = float(config_data.get('humi_override', 0))
+            humi_variation = float(config_data.get('humi_variation', 2))
+            lowhumi = sethumi - humi_variation
+            highhumi = sethumi + humi_variation
+            highhumi_max = int(config_data.get('highhumi_max', 72))
+
+            retries = int(config_data.get('retries', 5))
+            looptime = int(config_data.get('looptime', 60))
+            rrdfile = str(config_data.get('rrdfile', "/default/path.rrd"))
+            no_actuate = str(config_data.get('no_actuate', "0")).lower() in ["1", "true", "yes"]
+
+            if temp_override != 0 or humi_override != 0:
+                current_temp = temp_override if temp_override != 0 else 0
+                humidity = humi_override if humi_override != 0 else 0
+                valid_temp = True
+            else:
+                valid_temp = False
+        else:
+            # fallback defaults if no JSON config file
+            settemp = 66
+            lowtemp = 64
+            hightemp = 68
+            hightemp_max = 72
+            sethumi = 68
+            lowhumi = 64
+            highhumi = 70
+            highhumi_max = 72
+            retries = 5
+
+        if not valid_temp:
+            current_temp, humidity, valid_temp = get_temp(retries)
+
+        if valid_temp:
+            print(f"TemperatureF: {current_temp} - Humidity: {humidity}")
+            print(f"Set Temp: {settemp} - HighF: {hightemp} - LowF: {lowtemp} "
+                  f"- HighF Max: {hightemp_max} - OverrideF: {temp_override} - Output: {output_mode}")
+
+            temp_output, humi_output = set_output(hightemp, lowtemp, current_temp,
+                                      highhumi, lowhumi, humidity, no_actuate)
+
+            fridgemode = lowtemp if temp_output else hightemp
+            humidmode = lowhumi if humi_output else highhumi
+            
+            try:
+                # rrdtool.update(rrdfile, f'N:{current_temp:.2f}:{fridgemode:.2f}:{humidity:.2f}')
+                rrdtool.update(rrdfile, f'N:{current_temp:.2f}:{fridgemode:.2f}:{humidity:.2f}:{humidmode:.2f}')
+            except rrdtool.OperationalError as e:
+                print(f"RRD update failed: {e}")
+
+            time.sleep(looptime)
+        else:
+            reset_count += 1
+            print(f"Failed to get valid temp reading. Reset Count: {reset_count}")
+            GPIO.output(temp_pin, GPIO.LOW)
+            GPIO.output(humidity_pin, GPIO.LOW)
+            reset_sensor(sensor_power)
+
+if __name__ == '__main__':
     try:
         main_run()
-    except:
-        GPIO.output(temp_pin, GPIO.LOW) # set pin low
-        GPIO.cleanup()
+    except Exception:
+        GPIO.output(temp_pin, GPIO.LOW)
+        GPIO.output(humidity_pin, GPIO.LOW)
         traceback.print_exc()
-
+    finally:
+        GPIO.cleanup()
