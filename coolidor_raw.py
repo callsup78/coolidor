@@ -77,11 +77,11 @@ def set_output(hightemp, lowtemp, current_temp,
     # --- Humidity control ---
     if humidity > highhumi:
         if not no_actuate:
-            GPIO.output(humidity_pin, GPIO.HIGH)  # turn ON dehumidifier/fan
+            GPIO.output(humidity_pin, GPIO.HIGH)  # turn ON humidifier
         humi_output = True
     elif humidity < lowhumi:
         if not no_actuate:
-            GPIO.output(humidity_pin, GPIO.LOW)   # turn OFF dehumidifier/fan
+            GPIO.output(humidity_pin, GPIO.LOW)   # turn OFF humidifier
         humi_output = False
     else:
         humi_output = bool(GPIO.input(humidity_pin))
@@ -129,7 +129,7 @@ def main_run():
             else:
                 valid_temp = False
         else:
-            # fallback defaults if no JSON config file
+            # defaults if config file missing or read failure
             settemp = 66
             lowtemp = 64
             hightemp = 68
@@ -155,7 +155,6 @@ def main_run():
             humidmode = lowhumi if humi_output else highhumi
             
             try:
-                # rrdtool.update(rrdfile, f'N:{current_temp:.2f}:{fridgemode:.2f}:{humidity:.2f}')
                 rrdtool.update(rrdfile, f'N:{current_temp:.2f}:{fridgemode:.2f}:{humidity:.2f}:{humidmode:.2f}')
             except rrdtool.OperationalError as e:
                 print(f"RRD update failed: {e}")
@@ -177,3 +176,4 @@ if __name__ == '__main__':
         traceback.print_exc()
     finally:
         GPIO.cleanup()
+
