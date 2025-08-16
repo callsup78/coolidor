@@ -34,7 +34,7 @@ def reset_sensor(sensor_power, offtime=10):
     GPIO.output(sensor_power, GPIO.LOW) # set pin low
     time.sleep(offtime)
     GPIO.output(sensor_power, 1) # set pin high
-    time.sleep(2)
+    time.sleep(offtime)
     print ('Temp sensor reset complete.')
 
 def get_temp(retries=5):
@@ -176,4 +176,5 @@ if __name__ == '__main__':
         traceback.print_exc()
     finally:
         GPIO.cleanup()
+
 
