@@ -9,11 +9,11 @@ Sources:
 
 Hardware:
 Raspberry Pi Zero 2 W: https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/
-AdaFruit DHT-20 Sensor: https://www.adafruit.com/product/5183
+AdaFruit DHT-22 Sensor: [https://www.adafruit.com/product/5183](https://www.adafruit.com/product/385)
 
 Software:
-Sources pulled from mutple projects relating to Pi OS, DHT-20 Sensor, i2cdetect. 
-Most Code proudly stolen rinsed and reused from wizards like Tony DiCola & David Smith.
+Sources pulled from mutple projects relating to Pi OS, DHT-22 Sensor. 
+
 
 Install:
 * I utilzied a Standard Raspberry Pi image (Bookworm) for this.
@@ -22,9 +22,6 @@ sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install git
 sudo apt-get install gcc-aarch64-linux-gnu build-essential python3-dev libssl-dev libffi-dev
-sudo apt-get install rrdtool librrd-dev
 python3 -m venv --system-site-packages myenv
 source myenv/bin/activate
-pip3 install rrdtool
-pip3 install Adafruit_DHT --config-settings="--build-option=--force-pi"
 run script - wait for errors. There will likely be errors. muahahahaha
