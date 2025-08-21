@@ -16,11 +16,11 @@ Sources pulled from mutple projects relating to Pi OS, DHT-20 Sensor, i2cdetect.
 Most Code proudly stolen rinsed and reused from wizards like Tony DiCola & David Smith.
 
 Install:
-* I utilzied a Diet-Pi image for this.
-So using Dietpi-Software install the python3 bits.
-Then:
+* I utilzied a Standard Raspberry Pi image (Bookworm) for this.
+
 sudo apt-get update
 sudo apt-get upgrade
+sudo apt-get install git
 sudo apt install python3.11-venv
 sudo apt-get install rrdtool librrd-dev
 python3 -m venv venv
