@@ -21,6 +21,10 @@ Install:
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt-get install git
-sudo apt install python3.11-venv
+sudo apt-get install gcc-aarch64-linux-gnu build-essential python3-dev libssl-dev libffi-dev
 sudo apt-get install rrdtool librrd-dev
-python3 -m venv venv
+python3 -m venv --system-site-packages myenv
+source myenv/bin/activate
+pip3 install rrdtool
+pip3 install Adafruit_DHT --config-settings="--build-option=--force-pi"
+run script - wait for errors. There will likely be errors. muahahahaha
