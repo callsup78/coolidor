@@ -13,7 +13,7 @@
 
 
 ### Software:
-Sources pulled from mutple projects relating to Pi OS, DHT-22 Sensor. 
+Sources pulled from mutple projects relating to Pi OS, an Adafruit DHT-22 Sensor and the following python packages: import time, json, sys, board, digitalio, adafruit_dht   
 
 
 ### Install:
