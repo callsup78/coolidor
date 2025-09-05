@@ -1,8 +1,23 @@
 import time
 import json
+import sys
 import board
 import digitalio
 import adafruit_dht
+
+# logging
+class Logger(object):
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a")  # "a" = append mode
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+    def flush(self):
+        pass  # Needed for compatibility
+
+sys.stdout = Logger("coolidor.log")
+sys.stderr = sys.stdout   # also capture errors
 
 # --- Pin assignments ---
 sensor_pin = board.D4       # GPIO4 equivalent
@@ -41,7 +56,7 @@ sensor_power.value = False
 # DHT22 (sensor=22)
 dht_device = adafruit_dht.DHT22(sensor_pin)
 
-
+# Reset Sensor function
 def reset_sensor(offtime=10):
     print("Resetting sensor...")
     sensor_power.value = False
@@ -50,7 +65,7 @@ def reset_sensor(offtime=10):
     time.sleep(offtime)
     print("Sensor reset complete.")
 
-
+# get_temp function
 def get_temp(retries=5):
     for attempt in range(retries):
         try:
@@ -64,7 +79,7 @@ def get_temp(retries=5):
         time.sleep(2)
     return 0, 0, False
 
-
+#set output function
 def set_output(hightemp, lowtemp, current_temp,
                highhumi, lowhumi, humidity,
                no_actuate):
