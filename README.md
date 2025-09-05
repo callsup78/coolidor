@@ -1,9 +1,9 @@
 ## Project to replace the failing control board of a Whynter CHC-421HC cigar humidifier, utilizing a Raspberry Pi Zero 2 W, a pre-built relay contol box, and an AdaFruit DHT22 sensor.
+  
+  
 
 
-
-
-## Sources:
+### Sources:
 
 ### Hardware:  
 
@@ -17,7 +17,7 @@ Sources pulled from mutple projects relating to Pi OS, DHT-22 Sensor.
 
 
 ### Install:
-* I utilzied a Standard Raspberry Pi image (Bookworm) for this.
+Note: * I utilzied a Standard Raspberry Pi image (Bookworm) and the pi-imager software for this as my starting point.
 
 sudo apt-get update  
 sudo apt-get upgrade  
