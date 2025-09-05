@@ -17,7 +17,7 @@ class Logger(object):
         pass  # Needed for compatibility
 
 sys.stdout = Logger("coolidor.log")
-sys.stderr = sys.stdout   # also capture errors
+sys.stderr = Logger("coolidor.err")   # also capture errors to separate log
 
 # --- Pin assignments ---
 sensor_pin = board.D4       # GPIO4 equivalent
