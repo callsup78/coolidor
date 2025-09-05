@@ -7,9 +7,9 @@ utilizing a Raspberry Pi Zero 2 W, a 2 relay contol board, and an i2c AdaFruit D
 
 Sources:
 
-Hardware:
-[https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/](Raspberry Pi Zero 2 W) <br>
-[https://www.adafruit.com/product/5183](AdaFruit DHT-22 Sensor)
+Hardware:  
+[https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/] (Raspberry Pi Zero 2 W)  
+[https://www.adafruit.com/product/5183] (AdaFruit DHT-22 Sensor)
 
 Software:
 Sources pulled from mutple projects relating to Pi OS, DHT-22 Sensor. 
