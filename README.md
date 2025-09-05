@@ -1,10 +1,9 @@
-# Project to replace the failing control board of a Whynter CHC-421HC cigar humidifier,
-utilizing a Raspberry Pi Zero 2 W, a pre-built relay contol box, and an AdaFruit DHT22 sensor.
+## Project to replace the failing control board of a Whynter CHC-421HC cigar humidifier, utilizing a Raspberry Pi Zero 2 W, a pre-built relay contol box, and an AdaFruit DHT22 sensor.
 
 
 
 
-##Sources:
+## Sources:
 
 ### Hardware:  
 
