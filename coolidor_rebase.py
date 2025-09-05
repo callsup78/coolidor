@@ -9,15 +9,26 @@ import adafruit_dht
 class Logger(object):
     def __init__(self, filename):
         self.terminal = sys.stdout
-        self.log = open(filename, "a")  # "a" = append mode
+        self.log = open(filename, "a")
     def write(self, message):
         self.terminal.write(message)
         self.log.write(message)
     def flush(self):
-        pass  # Needed for compatibility
+        pass
 
-sys.stdout = Logger("coolidor.log")
-sys.stderr = Logger("coolidor.err")   # also capture errors to separate log
+class ErrorLogger(object):
+    def __init__(self, filename):
+        self.terminal = sys.stderr
+        self.log = open(filename, "a")
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+    def flush(self):
+        pass
+
+# Redirect logging outputs
+sys.stdout = Logger("coolidor.log")     # normal log data
+sys.stderr = ErrorLogger("coolidor.err")  # error log data
 
 # --- Pin assignments ---
 sensor_pin = board.D4       # GPIO4 equivalent
