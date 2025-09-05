@@ -9,7 +9,8 @@
 
 <a href="https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/">Raspberry Pi Zero 2 W</a>  
 <a href="https://www.adafruit.com/product/5183">AdaFruit DHT-22 Sensor</a>  
-<a href="https://www.amazon.com/dp/B08BNJMNXT"> Low cost 10a Relay</a>
+<a href="https://www.amazon.com/dp/B08BNJMNXT"> Low cost 10a Relay</a>  
+<a href="https://www.amazon.com/dp/B019GUOV40"> Mean Well 5v 35w Power Supply</a>
 
 
 ### Software:
