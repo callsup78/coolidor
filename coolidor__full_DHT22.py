@@ -8,7 +8,7 @@ import sys
 import board
 import digitalio
 import busio
-import adafruit_dht20
+import adafruit_dht
 
 # logging
 class Logger(object):
