@@ -1,3 +1,7 @@
+# ------------------------------
+# AdaFruit DHT20 Sensor 
+# ------------------------------
+
 import time
 import json
 import sys
@@ -6,7 +10,9 @@ import digitalio
 import busio
 import adafruit_dht20
 
-# logging
+# ------------------------------
+# Logging setup
+# ------------------------------
 class Logger(object):
     def __init__(self, filename):
         self.terminal = sys.stdout
@@ -31,13 +37,18 @@ class ErrorLogger(object):
 sys.stdout = Logger("coolidor.log")
 sys.stderr = ErrorLogger("coolidor.err")
 
-# --- Pin assignments ---
-temp_pin = board.D23
-humidity_pin = board.D24
+# ------------------------------
+# Pin assignments
+# ------------------------------
+sensor_power_pin = board.D17  # Powers the DHT20
+temp_pin = board.D23          # Output control pin for cooling
+humidity_pin = board.D24      # Output control pin for humidity
 
 coolidor_file = "coolidor.json"
 
-# --- Defaults ---
+# ------------------------------
+# Defaults
+# ------------------------------
 settemp = 66
 lowtemp = 64
 hightemp = 68
@@ -50,7 +61,9 @@ retries = 5
 looptime = 60
 no_actuate = False
 
-# --- Outputs ---
+# ------------------------------
+# Outputs setup
+# ------------------------------
 temp_out = digitalio.DigitalInOut(temp_pin)
 temp_out.direction = digitalio.Direction.OUTPUT
 temp_out.value = False
@@ -59,11 +72,39 @@ humi_out = digitalio.DigitalInOut(humidity_pin)
 humi_out.direction = digitalio.Direction.OUTPUT
 humi_out.value = False
 
-# --- DHT20 via I2C ---
-i2c = busio.I2C(board.SCL, board.SDA)
-dht_device = adafruit_dht20.DHT20(i2c)
+sensor_power = digitalio.DigitalInOut(sensor_power_pin)
+sensor_power.direction = digitalio.Direction.OUTPUT
+sensor_power.value = False
 
-# get_temp function
+# ------------------------------
+# DHT20 (I2C)
+# ------------------------------
+def init_sensor():
+    """Initialize DHT20 after powering up"""
+    i2c = busio.I2C(board.SCL, board.SDA)
+    return adafruit_dht20.DHT20(i2c)
+
+# Power up sensor and initialize
+sensor_power.value = True
+time.sleep(2)
+dht_device = init_sensor()
+
+# ------------------------------
+# Reset sensor (toggle power)
+# ------------------------------
+def reset_sensor(offtime=5):
+    print("Resetting DHT20 sensor...")
+    global dht_device
+    sensor_power.value = False
+    time.sleep(offtime)
+    sensor_power.value = True
+    time.sleep(offtime)
+    dht_device = init_sensor()
+    print("Sensor reset complete.")
+
+# ------------------------------
+# Read temperature and humidity
+# ------------------------------
 def get_temp(retries=5):
     for attempt in range(retries):
         try:
@@ -74,10 +115,12 @@ def get_temp(retries=5):
                 return current_temp, humidity, True
         except Exception as e:
             print(f"Retry {attempt+1}/{retries} failed: {e}")
-        time.sleep(1)
+        time.sleep(2)
     return 0, 0, False
 
-# set output function
+# ------------------------------
+# Control outputs
+# ------------------------------
 def set_output(hightemp, lowtemp, current_temp,
                highhumi, lowhumi, humidity,
                no_actuate):
@@ -111,9 +154,14 @@ def set_output(hightemp, lowtemp, current_temp,
     print(f"[OUTPUT] Temp: {temp_output}, Humidity: {humi_output}, No_Actuate={no_actuate}")
     return temp_output, humi_output
 
+# ------------------------------
+# Main loop
+# ------------------------------
 def main_run():
+    reset_sensor()
+    reset_count = 0
+
     while True:
-        # Load config if present
         try:
             with open(coolidor_file, "r") as f:
                 config = json.load(f)
@@ -150,17 +198,21 @@ def main_run():
 
         if valid_temp:
             print(f"TempF: {current_temp:.1f}  Humidity: {humidity:.1f}")
-            temp_output, humi_output = set_output(hightemp, lowtemp, current_temp,
-                                                  highhumi, lowhumi, humidity,
-                                                  no_actuate)
+            set_output(hightemp, lowtemp, current_temp,
+                       highhumi, lowhumi, humidity,
+                       no_actuate)
         else:
-            print("Failed to read sensor. Skipping this cycle.")
+            reset_count += 1
+            print(f"Failed to read sensor. Reset Count={reset_count}")
             temp_out.value = False
             humi_out.value = False
+            reset_sensor()
 
         time.sleep(looptime)
 
-# --- Main ---
+# ------------------------------
+# Main entry
+# ------------------------------
 try:
     main_run()
 except Exception as e:
