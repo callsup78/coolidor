@@ -1,3 +1,7 @@
+# ------------------------------
+# AdaFruit DHT22 Sensor 
+# ------------------------------
+
 import time
 import json
 import sys
